@@ -159,7 +159,6 @@ function orderText_(data, now, orderNo) {
     '',
     'PORUDŽBINA',
     'Tip: ' + (jeGotovDizajn ? 'Kupac ima svoj dizajn' : 'Kupac traži izradu dizajna'),
-    'Oblik: ' + (data.oblik || '-'),
     'Dimenzije: ' + dimenzije,
     'Količina: ' + (data.kolicina || '-'),
     'Materijal: ' + (data.materijal || '-'),
