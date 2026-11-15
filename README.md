@@ -37,6 +37,7 @@ Posle toga: u tvom Drive-u se pravi folder **Stickora porudžbine** (sam, prvi p
 a unutra za svaku porudžbinu podfolder, npr.
 `0001 — matke 67 (50 kom)`, u kome su:
 - broj porudžbine je **redni** (prva ikada = `0001`, druga = `0002`…), ne random;
+  brojač se pamti u Script Properties i ne gleda imena foldera u Drive-u;
 - **fajl sa dizajnom** koji se štampa (imе fajla kakvo je kupac poslao),
 - **porudzbina.txt** — isti format kao `podaci-porudzbine.txt` (kupac, porudžbina,
   opis, napomena).

@@ -19,6 +19,7 @@ var FOLDER_NAME = 'Stickora porudžbine';  // glavni folder u Drive-u (pravi se 
 var NOTIFY_EMAIL = '';                    // prazno = obaveštenje ide na mejl vlasnika skripte
 var MAX_FILE_BYTES = 30 * 1024 * 1024;    // 30MB (sajt ograničava na 20MB)
 var COUNTER_PROP = 'brojPorudzbine';      // gde se pamti poslednji redni broj
+var SCHEMA_PROP = 'schemaRedniBrojevi';   // oznaka da je brojač prebačen na čist redni broj
 
 function doPost(e) {
   try {
@@ -36,8 +37,8 @@ function doPost(e) {
       }
     }
 
-    var orderNo = nextOrderNo_();          // 0001, 0002, 0003…
     var root = getFolder_();
+    var orderNo = nextOrderNo_(root, data);   // 0001, 0002, 0003…
     var orderFolder = root.createFolder(folderName_(data, orderNo));
 
     var fileUrl = '';
@@ -77,33 +78,36 @@ function doGet() {
 
 // ==== REDNI BROJ PORUDŽBINE ====
 
-/** Sledeći redni broj; otporan na paralelne zahteve i na brisanje skript-property-ja. */
-function nextOrderNo_() {
+/**
+ * Sledeći redni broj: 0001, 0002, 0003…
+ * Brojač se pamti u Script Properties i NE gleda imena foldera u Drive-u
+ * (ranije je gledao, pa je od foldera "2026…" dobio besmislen broj 2027).
+ * Prvi poziv posle ove izmene počinje od 0001.
+ */
+function nextOrderNo_(root, data) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
     var props = PropertiesService.getScriptProperties();
-    var sacuvano = Number(props.getProperty(COUNTER_PROP) || 0);
-    var izFoldera = maxFolderNumber_();
-    var sledeci = Math.max(sacuvano, izFoldera) + 1;
-    props.setProperty(COUNTER_PROP, String(sledeci));
-    return ('000' + sledeci).slice(-4);
+    if (props.getProperty(SCHEMA_PROP) !== 'cisto') {
+      props.setProperty(COUNTER_PROP, '0');
+      props.setProperty(SCHEMA_PROP, 'cisto');
+    }
+    var n = Number(props.getProperty(COUNTER_PROP) || 0);
+    var name;
+    do {
+      n++;
+      name = folderName_(data, formatNo_(n));
+    } while (n < 100000 && root.getFoldersByName(name).hasNext());
+    props.setProperty(COUNTER_PROP, String(n));
+    return formatNo_(n);
   } finally {
     lock.releaseLock();
   }
 }
 
-/** Najveći broj koji već postoji u imenima foldera (da se ne bi ponovio). */
-function maxFolderNumber_() {
-  var max = 0;
-  var it = DriveApp.getFoldersByName(FOLDER_NAME);
-  if (!it.hasNext()) return 0;
-  var children = it.next().getFolders();
-  while (children.hasNext()) {
-    var m = String(children.next().getName()).match(/^(\d+)/);
-    if (m) max = Math.max(max, Number(m[1]));
-  }
-  return max;
+function formatNo_(n) {
+  return n < 1000 ? ('000' + n) : String(n);
 }
 
 // ==== POMOĆNE FUNKCIJE ====

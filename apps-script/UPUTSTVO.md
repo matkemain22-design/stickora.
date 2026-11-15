@@ -117,6 +117,7 @@ Ako se pojavi crveno — pogledaj „Ako zapne" niže.
 - **Google Drive** (`drive.google.com`) → folder **Stickora porudžbine** → unutra
   je novi podfolder sa rednim brojem, npr. `0001 — matke 67 (50 kom)`
   (prva porudžbina ikada je 0001, druga 0002, itd.).
+  Prva porudžbina posle ove izmene kreće od `0001` — brojač se tada sam resetuje.
 - U tom podfolderu su **fajl sa dizajnom** (onaj koji se štampa) i
   **porudzbina.txt** sa svim podacima (kupac, dimenzije, količina, opis, napomena).
 - **Gmail** → stiže mejl „Nova porudžbina — …" (prvi možda u Spam/Neželjeno, pa
