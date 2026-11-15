@@ -76,6 +76,18 @@ function doGet() {
   });
 }
 
+/**
+ * RUČNI RESET BROJAČA.
+ * U Apps Script editoru: izaberi funkciju "resetujBrojac" (padajuća lista gore)
+ * i klikni Run. Sledeća porudžbina dobija broj 0001.
+ */
+function resetujBrojac() {
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(COUNTER_PROP, '0');
+  props.setProperty(SCHEMA_PROP, 'cisto');
+  return 'Brojač je resetovan — sledeća porudžbina je 0001.';
+}
+
 // ==== REDNI BROJ PORUDŽBINE ====
 
 /**
