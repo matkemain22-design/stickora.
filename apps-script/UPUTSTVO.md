@@ -64,11 +64,11 @@ pravi foldere i šalje ti mejl.
 Klikni **Copy** (Kopiraj) i nalepi negde kod sebe u beležnicu — trebaće ti u
 koraku 17.
 
-**Korak 15. Provera da skripta radi:** nalepi taj URL u novi tab u browseru i
-klikni Enter. Treba da vidiš tekst:
+**Korak 15. Provera da skripta radi i koja je verzija:** nalepi taj URL u novi tab
+u browseru i klikni Enter. Treba da vidiš tekst (obrati pažnju na `"version":"2"`):
 
 ```json
-{"ok":true,"message":"Stickora endpoint radi. Porudžbine se šalju POST zahtevom."}
+{"ok":true,"version":"2","message":"Stickora endpoint radi (verzija 2 — folder po porudžbini, redni brojevi)."}
 ```
 
 Ako to vidiš — Google strana je gotova. ✅
@@ -115,7 +115,8 @@ Ako se pojavi crveno — pogledaj „Ako zapne" niže.
 
 **Korak 24.** Proveri gde je otišlo:
 - **Google Drive** (`drive.google.com`) → folder **Stickora porudžbine** → unutra
-  je novi podfolder, npr. `20261115-214640-ab12 — matke 67 (50 kom)`.
+  je novi podfolder sa rednim brojem, npr. `0001 — matke 67 (50 kom)`
+  (prva porudžbina ikada je 0001, druga 0002, itd.).
 - U tom podfolderu su **fajl sa dizajnom** (onaj koji se štampa) i
   **porudzbina.txt** sa svim podacima (kupac, dimenzije, količina, opis, napomena).
 - **Gmail** → stiže mejl „Nova porudžbina — …" (prvi možda u Spam/Neželjeno, pa
@@ -135,6 +136,12 @@ osvežen posle commita. Sačekaj 1–2 minuta i osveži stranicu (`Ctrl+F5`).
 → Najčešće: u Apps Script-u *Who has access* nije **Anyone**, ili u
 `data-endpoint` fali deo URL-a, ili je URL iz **starog** deployment-a. Ponovi
 korake 7–15 i nalepi novi URL.
+
+**Porudžbina i dalje pravi Google tabelu / broj je random**
+→ Google vrti staru verziju koda. U Apps Script-u: **Deploy → Manage deployments
+→ olovčica (Edit) → Version: New version → Deploy**. Zatim otvori Web app URL u
+browseru — mora da piše `"version":"2"`. Ako ne piše, nova verzija nije objavljena.
+Startu tabelu **Stickora porudžbine** slobodno obriši, nova se ne pravi.
 
 **Promenio si nešto u skripti, a sajt se ponaša po starom**
 → U Apps Script-u: **Deploy → Manage deployments → olovčica (Edit) → Version:

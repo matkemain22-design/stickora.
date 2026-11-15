@@ -1,22 +1,24 @@
 /**
- * Stickora.rs — porudžbine u Google Drive.
+ * Stickora.rs — porudžbine u Google Drive.  VERZIJA 2 (folder + redni broj)
  *
  * Za svaku porudžbinu pravi se JEDAN folder u Drive-u, npr.
- *   "20261115-214640-ab12 — matke 67 (50 kom)"
+ *   "0001 — matke 67 (50 kom)"
  * a u njemu:
  *   - fajl sa dizajnom koji se štampa (slika/PDF/…)
  *   - porudzbina.txt sa svim podacima o porudžbini
+ * Broj porudžbine je redni: prva ikada = 0001, druga = 0002, itd.
  * Na mejl stiže isti tekst + link ka folderu. Google tabela se NE pravi.
  *
- * Deploy: Deploy -> New deployment -> Web app
- *   Execute as: Me  |  Who has access: Anyone
- * Kopiraj URL i nalepi ga u index.html u atribut data-endpoint na <form id="orderForm">.
+ * Deploy: Deploy -> Manage deployments -> Edit -> Version: New version -> Deploy
+ *   (Execute as: Me  |  Who has access: Anyone)
+ * Provera verzije: otvori Web app URL u browseru — mora da piše "verzija": "2".
  */
 
 // ==== PODESAVANJA ====
 var FOLDER_NAME = 'Stickora porudžbine';  // glavni folder u Drive-u (pravi se sam ako ne postoji)
 var NOTIFY_EMAIL = '';                    // prazno = obaveštenje ide na mejl vlasnika skripte
 var MAX_FILE_BYTES = 30 * 1024 * 1024;    // 30MB (sajt ograničava na 20MB)
+var COUNTER_PROP = 'brojPorudzbine';      // gde se pamti poslednji redni broj
 
 function doPost(e) {
   try {
@@ -25,8 +27,6 @@ function doPost(e) {
     }
     var data = JSON.parse(e.postData.contents);
     var now = new Date();
-    var orderNo = Utilities.formatDate(now, 'Europe/Belgrade', 'yyyyMMdd-HHmmss') + '-' +
-      Utilities.getUuid().slice(0, 4);
 
     var fileBytes = null;
     if (data.fajl && data.fajl.base64) {
@@ -36,6 +36,7 @@ function doPost(e) {
       }
     }
 
+    var orderNo = nextOrderNo_();          // 0001, 0002, 0003…
     var root = getFolder_();
     var orderFolder = root.createFolder(folderName_(data, orderNo));
 
@@ -56,17 +57,53 @@ function doPost(e) {
 
     return json_({
       ok: true,
-      orderId: orderNo,
+      version: '2',
+      orderNumber: orderNo,
       folderUrl: orderFolder.getUrl(),
       fileUrl: fileUrl,
     });
   } catch (err) {
-    return json_({ ok: false, error: String((err && err.message) || err) });
+    return json_({ ok: false, version: '2', error: String((err && err.message) || err) });
   }
 }
 
 function doGet() {
-  return json_({ ok: true, message: 'Stickora endpoint radi. Porudžbine se šalju POST zahtevom.' });
+  return json_({
+    ok: true,
+    version: '2',
+    message: 'Stickora endpoint radi (verzija 2 — folder po porudžbini, redni brojevi).',
+  });
+}
+
+// ==== REDNI BROJ PORUDŽBINE ====
+
+/** Sledeći redni broj; otporan na paralelne zahteve i na brisanje skript-property-ja. */
+function nextOrderNo_() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var sacuvano = Number(props.getProperty(COUNTER_PROP) || 0);
+    var izFoldera = maxFolderNumber_();
+    var sledeci = Math.max(sacuvano, izFoldera) + 1;
+    props.setProperty(COUNTER_PROP, String(sledeci));
+    return ('000' + sledeci).slice(-4);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Najveći broj koji već postoji u imenima foldera (da se ne bi ponovio). */
+function maxFolderNumber_() {
+  var max = 0;
+  var it = DriveApp.getFoldersByName(FOLDER_NAME);
+  if (!it.hasNext()) return 0;
+  var children = it.next().getFolders();
+  while (children.hasNext()) {
+    var m = String(children.next().getName()).match(/^(\d+)/);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return max;
 }
 
 // ==== POMOĆNE FUNKCIJE ====
@@ -123,7 +160,7 @@ function notify_(data, orderNo, text, folderUrl, fileUrl) {
   var to = NOTIFY_EMAIL || Session.getActiveUser().getEmail();
   if (!to) return;
   var body = text + '\n\nFolder: ' + folderUrl + '\nFajl: ' + (fileUrl || 'nije priložen');
-  MailApp.sendEmail(to, 'Nova porudžbina — ' + (data.ime || orderNo) +
+  MailApp.sendEmail(to, 'Nova porudžbina #' + orderNo + ' — ' + (data.ime || '') +
     (data.kolicina ? ' (' + data.kolicina + ' kom)' : ''), body);
 }
 
